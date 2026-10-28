@@ -1,0 +1,142 @@
+Here are the notes and code explanations from the video **"Structured Output in LangChain | Generative AI using LangChain | Video 5 | CampusX"**:
+
+### 1. Structured vs. Unstructured Output
+
+The instructor explains that typically, interactions with LLMs produce **unstructured output** (plain text). While this is fine for humans reading a chatbot's reply, it becomes a problem when you want to programmatically extract that data and pass it to another system, like a database, an API, or an AI Agent Tool.
+
+**Structured Output** forces the LLM to return data in a specific format (usually JSON/Python dictionaries). This allows you to easily extract keys and values.
+
+**Key Use Cases:**
+
+* **Data Extraction:** Extracting a candidate's name, skills, and GPA from a resume to save in a database.
+* **API Creation:** Summarizing long Amazon product reviews into topics, pros, cons, and sentiments, and serving that data via a Flask/FastAPI backend.
+* **AI Agents:** Forcing the LLM to output specific numerical variables so they can be passed to a tool, like a calculator.
+
+### 2. The `with_structured_output()` Method
+
+LangChain provides the `.with_structured_output()` function, which acts as a wrapper around your LLM. When you use this, LangChain secretly generates a prompt behind the scenes telling the LLM exactly what format to return the data in based on a schema you define.
+
+*Note: Not all LLMs support this natively (e.g., small open-source models like TinyLlama will fail). For models that don't support it natively, you have to use **Output Parsers** (covered in the next video).*
+
+### 3. Defining Schemas
+
+The video demonstrates three ways to define the schema (the "blueprint" of the data) that you want the LLM to follow:
+
+#### Method A: TypedDict (Python Standard Library)
+
+`TypedDict` is a lightweight way to define dictionary structures. It tells the code editor what types to expect, but **it does not perform actual data validation at runtime.** (If the LLM returns an integer instead of a string, it will not throw an error).
+
+```python
+from langchain_openai import ChatOpenAI
+from typing import TypedDict, Optional, Literal, Annotated
+from dotenv import load_dotenv
+
+load_dotenv()
+model = ChatOpenAI(model="gpt-3.5-turbo")
+
+# 1. Define the Schema using TypedDict
+class Review(TypedDict):
+    # Use Annotated to give the LLM a description of what you want
+    summary: Annotated[str, "A brief summary of the review"]
+    
+    # Use Literal to restrict the LLM to specific options
+    sentiment: Annotated[Literal["positive", "negative"], "Sentiment of the review"]
+    
+    # Use Optional if the data might not be present in the text
+    pros: Annotated[Optional[list[str]], "List of pros mentioned, if any"]
+    cons: Annotated[Optional[list[str]], "List of cons mentioned, if any"]
+
+# 2. Wrap the model
+structured_model = model.with_structured_output(Review)
+
+# 3. Invoke the model
+review_text = "The phone has a great battery and fast charging, but the camera is terrible."
+result = structured_model.invoke(review_text)
+
+print(result) # Returns a Python Dictionary
+print(result['sentiment']) 
+
+```
+
+#### Method B: Pydantic (Industry Standard)
+
+Pydantic is the industry standard for data validation (heavily used in FastAPI). Unlike `TypedDict`, Pydantic **actively validates data at runtime.** If the LLM returns a string when you asked for an integer, Pydantic will try to convert it (type coercion). If it can't, it will throw an error, preventing bad data from reaching your database.
+
+```python
+from langchain_openai import ChatOpenAI
+from pydantic import BaseModel, Field
+from typing import Optional, Literal
+from dotenv import load_dotenv
+
+load_dotenv()
+model = ChatOpenAI(model="gpt-3.5-turbo")
+
+# 1. Define the Schema using Pydantic BaseModel
+class Review(BaseModel):
+    # Use Field() to provide descriptions and default values
+    summary: str = Field(description="A brief summary of the review")
+    
+    sentiment: Literal["positive", "negative"] = Field(description="Sentiment of the review")
+    
+    # Define constraints (e.g., must be greater than 0)
+    rating: int = Field(gt=0, le=10, description="Rating out of 10")
+    
+    pros: Optional[list[str]] = Field(default=None, description="List of pros mentioned")
+
+# 2. Wrap the model
+structured_model = model.with_structured_output(Review)
+
+review_text = "I rate this 8/10. Great screen, bad speakers."
+result = structured_model.invoke(review_text)
+
+print(result) # Returns a Pydantic Object
+print(result.rating) # Access attributes using dot notation
+
+```
+
+#### Method C: JSON Schema
+
+If your project spans multiple programming languages (e.g., Python backend, JavaScript frontend), you can use a raw JSON schema. It is language-agnostic.
+
+```python
+from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
+model = ChatOpenAI(model="gpt-3.5-turbo")
+
+# 1. Define raw JSON Schema
+json_schema = {
+    "title": "Review",
+    "type": "object",
+    "properties": {
+        "summary": {
+            "type": "string",
+            "description": "A brief summary of the review"
+        },
+        "sentiment": {
+            "type": "string",
+            "enum": ["positive", "negative"],
+            "description": "Sentiment of the review"
+        }
+    },
+    "required": ["summary", "sentiment"]
+}
+
+# 2. Wrap the model
+structured_model = model.with_structured_output(json_schema)
+
+result = structured_model.invoke("Great battery, bad camera.")
+print(result) # Returns a Python Dictionary
+
+```
+
+### 4. Which one should you use?
+
+* **Pydantic:** The go-to choice for Python-heavy projects. It provides robust validation, automatic type conversion, and is highly readable.
+* **JSON Schema:** Use only when you need to share the schema structure with non-Python languages in your stack.
+* **TypedDict:** Rarely used over Pydantic, only suitable if you strictly want to avoid importing external libraries like Pydantic.
+
+---
+
+You can watch the full video [Generative AI using LangChain | Video 5 | CampusX](https://www.google.com/search?q=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dy5EmRr1O1h4) to see the instructor run through these examples step-by-step.
