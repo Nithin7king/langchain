@@ -1,0 +1,108 @@
+Here are the notes from the video **"LangChain Models | Indepth Tutorial with Code Demo | Video 3 | CampusX"**:
+
+### Overview of Models in LangChain
+
+The video explains that LangChain provides a common interface to interact with various AI models, solving the problem of different API providers having different ways of communicating with their models. LangChain supports two primary types of models:
+
+1. **Language Models**: These take text as input and return text as output. They are primarily used for generating responses and are categorized into two types:
+* **LLMs (Large Language Models)**: Older models meant for general text generation, translation, or summarization (e.g., GPT-3.5-Turbo-Instruct).
+* **Chat Models**: Newer models specifically fine-tuned for conversational tasks (like chatbots). They support conversational history and roles (system vs. user prompts).
+
+
+2. **Embedding Models**: These take text as input and return a vector (a list of numbers) representing the semantic meaning of that text. They are essential for building RAG (Retrieval-Augmented Generation) applications and semantic search.
+
+### Working with Chat Models (Code Implementation)
+
+The instructor demonstrates how to interact with different API providers using LangChain's unified interface. To do this, you first load API keys from a `.env` file using the `python-dotenv` package.
+
+**1. OpenAI (GPT-4)**
+
+```python
+from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Initialize the model
+model = ChatOpenAI(model="gpt-4")
+
+# Call the model
+result = model.invoke("What is the capital of India?")
+print(result.content) 
+
+```
+
+**2. Anthropic (Claude 3.5 Sonnet)**
+
+```python
+from langchain_anthropic import ChatAnthropic
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Initialize the model
+model = ChatAnthropic(model="claude-3-5-sonnet-20240620")
+
+result = model.invoke("What is the capital of India?")
+print(result.content)
+
+```
+
+**3. Google (Gemini 1.5 Pro)**
+
+```python
+from langchain_google_genai import ChatGoogleGenerativeAI
+from dotenv import load_dotenv
+
+load_dotenv()
+
+model = ChatGoogleGenerativeAI(model="gemini-1.5-pro")
+
+result = model.invoke("What is the capital of India?")
+print(result.content)
+
+```
+
+The key takeaway is that switching between different enterprise models requires changing only the import statement and the model initialization; the `invoke()` method remains standard across all of them.
+
+### Open Source Models
+The video contrasts proprietary models (which cost money and require you to send data to external servers) with open-source models (like Llama or Falcon), which can be downloaded, fine-tuned, and run locally for free, ensuring data privacy.
+
+The instructor demonstrates using the TinyLlama model via the Hugging Face Inference API and running it locally using HuggingFacePipeline. Running models locally requires significant hardware (GPU/RAM) and storage.
+
+The video contrasts proprietary models (which cost money and require you to send data to external servers) with open-source models (like Llama or Falcon), which can be downloaded, fine-tuned, and run locally for free, ensuring data privacy.
+
+The instructor demonstrates using the **TinyLlama** model via the Hugging Face Inference API and running it locally using `HuggingFacePipeline`. Running models locally requires significant hardware (GPU/RAM) and storage.
+
+### Working with Embedding Models
+
+Embedding models generate vectors.
+
+**OpenAI Embeddings Example:**
+
+```python
+from langchain_openai import OpenAIEmbeddings
+
+embedding = OpenAIEmbeddings(model="text-embedding-3-large", dimensions=300)
+
+# Generate an embedding for a single string
+result = embedding.embed_query("Delhi is the capital of India")
+
+# Generate embeddings for a list of strings
+docs = ["Delhi...", "Paris...", "Kolkata..."]
+result_docs = embedding.embed_documents(docs)
+
+```
+
+### Document Similarity Search Example
+
+The video concludes by building a semantic search application. The workflow is:
+
+1. Generate embeddings for a list of documents (e.g., strings containing facts about different cricketers).
+2. Generate an embedding for the user's query (e.g., "Tell me about Virat Kohli").
+3. Compare the query embedding vector against the document embedding vectors using **Cosine Similarity** (from `scikit-learn`).
+4. Sort the similarity scores to find the document with the highest match (closest to 1.0) and return that document to the user.
+
+---
+
+You can find the full code and explanation in the [LangChain Models tutorial](https://www.google.com/search?q=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DHdcLE8JuMrA). This video provides a comprehensive hands-on guide for configuring and utilizing Lanchain models.
