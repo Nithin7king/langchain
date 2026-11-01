@@ -13,7 +13,6 @@ The video covers the four most commonly used output parsers in LangChain:
 #### A. String Output Parser (`StrOutputParser`)
 
 The simplest parser. When an LLM returns a response, it returns an object containing the text along with a lot of metadata (token usage, etc.). The `StrOutputParser` simply extracts the text (`result.content`) into a clean string.
-
 It is extremely useful when building **Chains** (pipelines) where the output of one LLM call needs to be fed directly as a string into the prompt of the next LLM call.
 
 ```python
@@ -39,19 +38,19 @@ template_2 = PromptTemplate(
 # 2. Initialize the Parser
 parser = StrOutputParser()
 
-# 3. Create a Chain
+# 3. Create a Chain 
 # The parser extracts the string from model 1 and feeds it directly into template 2
 chain = template_1 | model | parser | template_2 | model | parser
 
 # Execute
 result = chain.invoke({"topic": "Black Holes"})
 print(result)
+
 ```
 
 #### B. JSON Output Parser (`JsonOutputParser`)
 
 This parser forces the LLM to return a JSON object (which Python reads as a dictionary). It does this by generating formatting instructions that you inject into your prompt.
-
 *Drawback:* It does not enforce a specific schema. The LLM decides the structure of the JSON keys and values.
 
 ```python
@@ -72,13 +71,13 @@ chain = template | model | parser
 result = chain.invoke({})
 
 print(result) # Returns a Python Dictionary
-print(result['name'])
+print(result['name']) 
+
 ```
 
 #### C. Structured Output Parser (`StructuredOutputParser`)
 
 This solves the problem of the JSON parser. It allows you to define a specific schema (keys and descriptions) that the LLM must follow when generating the JSON.
-
 *Drawback:* It enforces a structure, but it **cannot perform data validation** (e.g., if you ask for an integer age, but the LLM returns the string "35 years", the code will not catch the error).
 
 ```python
@@ -106,6 +105,7 @@ template = PromptTemplate(
 chain = template | model | parser
 result = chain.invoke({"topic": "Black Holes"})
 print(result)
+
 ```
 
 #### D. Pydantic Output Parser (`PydanticOutputParser`)
@@ -141,8 +141,9 @@ result = chain.invoke({"place": "Sri Lankan"})
 
 print(result) # Returns a validated Pydantic object
 print(result.age)
+
 ```
 
 ---
 
-To see the instructor code and explain these concepts step-by-step, check out [Output Parsers in LangChain | Generative AI using LangChain | Video 6 | CampusX](https://www.google.com/search?q=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DOp6PbJZ5b2Q). This video demonstrates how to use LangChain to extract structured output from language models.
+To see the instructor code and explain these concepts step-by-step, check out [Output Parsers in LangChain | Generative AI using LangChain | Video 6 | CampusX](https://www.google.com/search?q=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DOp6PbJZ5b2Q). This video demonstrates how to use Langchain to extract structured output from language models.
